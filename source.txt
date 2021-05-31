@@ -1,0 +1,454 @@
+from collections import namedtuple
+from random import randint  
+from itertools import combinations
+
+class BreakIt(Exception): pass
+
+
+
+#-----------------------------------------------FUNCTIONS----------------------------------------------------
+
+#Function removing all off-alphabet chars from text
+#INPUT 
+    #text - string with off-alphabet chars
+    #alphabet - string of acceptable chars
+#OUTPUT
+    #text - text without off-alphabet chars
+def clear(text, alphabet):
+    i= 0
+    while i<len(text):
+        if text[i] not in alphabet:
+            text = text.replace(text[i], u'')
+        else:
+            i+=1
+    return text
+
+#Encryption - substitution cipher
+#INPUT 
+    #plaintext - string
+    #key - string defining  permutation "<encrypted A>, <encrypted B>,...,<encrytped Z>"
+    #alphabet - string defining set of used chars
+#OUTPUT
+    #ciphertext - string
+def encrypt(plaintext, key, alphabet):
+    ciphertext = ""
+    c = [key[alphabet.index(l)] for l in plaintext]
+    ciphertext = "".join(c)         
+    return ciphertext
+
+#Decryption - substitution cipher
+#INPUT 
+    #ciphertext - string
+    #key - string defining  permutation "<encrypted A>, <encrypted B>,...,<encrytped Z>"
+    #alphabet - string defining set of used chars
+#OUTPUT
+    #plaintext - string
+def decrypt(ciphertext, key, alphabet):
+    p = [alphabet[key.index(l)] for l in ciphertext]
+    plaintext = "".join(p)    
+    return plaintext
+
+#Frequency counter
+#INPUT 
+    #text - string
+    #alphabet - string defining set of used chars
+#OUTPUT
+    #frequency table - list of frequency letters [<frequency of A>,<frequancy of B>,..,<frequency of Z>]
+def countFrequency(text, alphabet):
+    frequency = []
+    lenText = len(text)
+    for a in alphabet:
+        counter = 0
+        for l in text:
+            if l == a:
+                counter+=1
+        frequency.append((a,counter))      
+    return sorted(frequency,key  = lambda x: x[1], reverse= True)
+
+#Dictionary maker
+#INPUT
+   #file - with word from dictionary (class _io.TextIOWrapper)
+   #alphabet - string
+   #size - minimal length to join to dictionary (int)
+#OUTPUT
+   #D- dictionary type: dictionary
+def makedictionary(file,alphabet,mini,maxi):
+    #print("otrzymałem mini = %d , maxi = %d"%(mini,maxi))
+    D = {}
+    index = 0   
+    for slowo in file:
+        slowo = slowo.upper()        
+        slowo = clear(slowo,alphabet)  
+        if len(slowo) < mini or len(slowo) > maxi:
+            continue
+        #print("dodaje slowo o dluosci %d"%len(slowo))
+        #slowo = slowo.rstrip()        
+        #slowo = slowo.decode('windows-1250')              
+        D.update({slowo:index})
+        index+=1    
+    return D
+
+
+
+#Random key generator
+#INPUT   
+   #alphabet - string
+#OUTPUT
+   #key - random key 
+def randKey(alphabet):
+    l = len(alphabet)
+    pula = alphabet
+    key = ''
+    for i in range(l):
+        ind = randint(0,len(pula)-1)
+        key = key + pula[ind]
+        pula = pula.replace(pula[ind],"")
+    return key
+
+#Difference calculator 
+#INPUT   
+   #pattern - string
+   #argument - string to compare
+#OUTPUT
+   #diffference - number of wrong letter
+def diffCalc(pattern, argument):
+    if len(pattern) != len(argument):
+        raise Exception("Wrong number of letter. Comparing impossible")
+    counter = 0
+    for i in range(len(pattern)):
+        if argument[i] != pattern[i]:
+            counter += 1
+    return counter
+
+#Frequency digram counter
+#INPUT 
+    #text - string
+    #alphabet - string defining set of used chars
+#OUTPUT
+    #frequency table - list of digrams frequency  [<frequency of TB>,<frequancy of DC>,..,<frequency of GF>]
+def countDigramFrequency(text):
+    frequency = []
+    used =  []
+    lenText = len(text)
+    for i in range(lenText-1):
+        pattern = text[i]+text[i+1]
+        if pattern in used:
+            continue
+        else:
+            used.append(pattern)
+        counter = 0
+        for j in range(i,lenText-1):            
+            if text[j] == pattern[0] and text[j+1] == pattern[1]:
+                counter+=1
+        if counter > 4:
+            frequency.append((pattern,counter))
+    frequency = sorted(frequency, key = lambda x: x[1], reverse= True)
+    return frequency
+
+#Frequency trigram counter
+#INPUT 
+    #text - string
+    #alphabet - string defining set of used chars
+#OUTPUT
+    #frequency table - list of trigrams frequency  [<frequency of TBF>,<frequancy of DCG>,..,<frequency of GFE>]
+def countTrigramFrequency(text):
+    frequency = []
+    used =  []
+    lenText = len(text)
+    for i in range(lenText-2):
+        pattern = text[i]+text[i+1]+text[i+2]
+        if pattern in used:
+            continue
+        else:
+            used.append(pattern)
+        counter = 0        
+        for j in range(i,lenText-2):            
+            if text[j] == pattern[0] and text[j+1] == pattern[1] and text[j+2] == pattern[2]:
+                counter+=1
+        if counter > 3:
+            frequency.append((pattern,counter))            
+    frequency = sorted(frequency, key = lambda x: x[1], reverse= True)
+    return frequency
+
+#--------------------------------------------------DATA-------------------------------------------------------
+    
+alphabetEnglish = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+lenAlphabetEnglish = len(alphabetEnglish)
+correctChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz \"'.?!():;,‘’"
+freqTuple = namedtuple("freqTuple", "letter frequency")
+diffTuple = namedtuple("diffTuple", "letter difference")
+frequencyEnglish =  [freqTuple( "E", 0.111620),freqTuple( "T", 0.093560),freqTuple( "A", 0.084970),
+                     freqTuple( "R", 0.075870),freqTuple( "I", 0.075460),freqTuple( "O", 0.075070),
+                     freqTuple( "N", 0.067490),freqTuple( "S", 0.063270),freqTuple( "H", 0.060940),
+                     freqTuple( "D", 0.042530),freqTuple( "L", 0.040250),freqTuple( "U", 0.027580),
+                     freqTuple( "W", 0.025600),freqTuple( "M", 0.024060),freqTuple( "F", 0.022800),
+                     freqTuple( "C", 0.022020),freqTuple( "G", 0.020150),freqTuple( "Y", 0.019940),
+                     freqTuple( "P", 0.019290),freqTuple( "B", 0.014920),freqTuple( "K", 0.012920),
+                     freqTuple( "V", 0.009780),freqTuple( "J", 0.001530),freqTuple( "X", 0.001500),
+                     freqTuple( "Q", 0.000950),freqTuple( "Z", 0.000770)]
+
+vowelsDictionairy = ["A","O","E","I","O","U","Y"]
+consonantsDictionairy = ["B","C","D","F","G","H","J","K","L","M","N","P","R","S","T","V","W","X","Z"]
+
+correspondenceSequence = []
+for tup1, tup2 in combinations(frequencyEnglish,2):
+    correspondenceSequence.append((tup1[0],tup2[0],abs(tup1[1]-tup2[1])))
+correspondenceSequence = sorted(correspondenceSequence,key=lambda x: x[2])
+#print(correspondenceSequence)
+
+dictionary = {}
+with open("dictionary.txt", "r") as fileDictionary:
+    dictionary = makedictionary(fileDictionary,alphabetEnglish,1,100)    
+    
+    
+#--------------------------------------------------CONTROL---------------------------------------------------------------------
+while(True):
+    print("------------------------APLIKACJA DO KRYPTOANALIZY SZYFRÓW  MONOALFABETYCZNYCH PODSTAWIENIOWYCH--------------------")
+        #INPUT
+    ciphertext = input("Podaj szyfrogram:\n")
+    ciphertext = ciphertext.upper()
+    x = 0
+    try:
+        for l in ciphertext:
+            if l not in correctChars:
+                print("""W podanym szyfrogramie występują znaki spoza alfabetu angielskiego lub inne niż standardowa 
+                interpunkcja. Sprawdź czy podany szyfrogram używa alfabetu angielskiego lub usuń dodatkowe znaki.""")
+                print("Przyjmowane znaki: ",correctChars)
+                print("Wybierz co chcesz dalej zrobić:")
+                print("1 - Wprowadzenie innego szyfrogramu")
+                print("2 - Wyjście")
+                try:
+                    x = int(input())
+                except:
+                    x = 0
+                while x != 1 and x !=2:
+                    try:
+                        x = int(input())
+                    except:
+                        x = 0                                   
+                if x == 1:
+                    raise BreakIt
+                else:
+                    raise                
+    except BreakIt:
+        continue
+    except:
+        quit()
+    #-------------------------------clearing, counting frequency-----------------------------------------------------
+    
+    ciphertext = clear(ciphertext,alphabetEnglish)
+    ciphertext = ciphertext.upper()
+    frequencyCiphertext = countFrequency(ciphertext,alphabetEnglish)
+    frequencyCiphertextLetters = list(map(lambda x: x[0],frequencyCiphertext))
+    
+    print("Częstość występowania liter w podanym szyfrogramie:")
+    for i in range(lenAlphabetEnglish):
+        print("%s %d"%(frequencyCiphertext[i]))   
+    digramfrequencyCiphertext = countDigramFrequency(ciphertext)
+    trigramFrequencyCiphertext = countTrigramFrequency(ciphertext)     
+    
+   
+    #----------------------------------------frequancy - speculation-----------------------------------------------------
+
+    potentialKey = [" " for i in range(lenAlphabetEnglish)]
+    
+    #top frequent letters
+    for j in range(5):
+        if frequencyCiphertext[j][0] ==  trigramFrequencyCiphertext[0][0][2]:
+            potentialKey[4]  =  frequencyCiphertext[j][0]
+    for j in range(5):
+        if frequencyCiphertext[j][0] ==  trigramFrequencyCiphertext[0][0][0]:
+            potentialKey[19] = frequencyCiphertext[j][0]
+    Acandidats = []
+    for j in range(5):
+        if frequencyCiphertextLetters[j] not in potentialKey:
+            Acandidats.append(frequencyCiphertextLetters[j])
+    for i in range(len(digramfrequencyCiphertext)):       
+            #print("wsolwystepujaca z e: ",frequencyCiphertext[i][0])
+            if digramfrequencyCiphertext[i][0][0] ==  potentialKey[4] and digramfrequencyCiphertext[i][0][1] in Acandidats:
+                potentialKey[0]  = digramfrequencyCiphertext[i][0][1]
+                break
+            elif digramfrequencyCiphertext[i][0][1] ==  potentialKey[4] and digramfrequencyCiphertext[i][0][0] in Acandidats:
+                potentialKey[0]  = igramfrequencyCiphertext[i][0][0]
+                break
+            
+
+        
+   
+    print("Po dopasowaniu częstości występowania liter z uwzględnieniem trigramów uzyskano prawdopodobne litery klucza:")
+    print(potentialKey)
+    print("Częstość występowania digramów w szyfrogramie:")
+    print(digramfrequencyCiphertext)
+    print("Częstość występowania trigramów w szygramie:")
+    print(trigramFrequencyCiphertext)
+    consonants = []
+    vowels = []
+    
+    #consoants and vowels division    
+    for i in range(1,11):
+        su = 0
+        for letter in digramfrequencyCiphertext:
+            if letter[0] == frequencyCiphertext[i][0]+potentialKey[4] or letter[0] == potentialKey[4] + frequencyCiphertext[i][0]:
+                su = su+letter[1]
+        if su > frequencyCiphertext[i][1]/2:
+            if frequencyCiphertext[i][0] not in potentialKey:
+                consonants.append(frequencyCiphertext[i][0])
+        if su < frequencyCiphertext[i][1]/10:
+            if frequencyCiphertext[i][0] not in potentialKey:
+                vowels.append(frequencyCiphertext[i][0])
+    
+   
+    #double vowels    
+    #"oo" - hunting
+    if len(vowels)>0:
+        for i in range(len(digramfrequencyCiphertext)):       
+            if digramfrequencyCiphertext[i][0][0] == digramfrequencyCiphertext[i][0][1] and digramfrequencyCiphertext[i][0][0] in vowels:
+                potentialKey[14] = digramfrequencyCiphertext[i][0][1]
+                vowels.remove(digramfrequencyCiphertext[i][0][1])
+                break
+       
+    print("Po dokonaniu analizy częstości zdublowanych samogłosek uzyskano następujące prawdopodobne litery klucza:")    
+    print(potentialKey) 
+    
+    #"THE" is the most frequent trigram in english!!!
+    if len(trigramFrequencyCiphertext) >0:
+        if trigramFrequencyCiphertext[0][0][0]==potentialKey[19] and  trigramFrequencyCiphertext[0][0][2] == potentialKey[4] :
+            if trigramFrequencyCiphertext[0][0][1] in consonants and trigramFrequencyCiphertext[0][0][1] not in potentialKey:
+                potentialKey[7] = trigramFrequencyCiphertext[0][0][1]
+                consonants.remove(trigramFrequencyCiphertext[0][0][1])
+    
+    print("Po dokonaniu analizy częstości trigramów oraz uwzglednieiu podziału na samogłoski i spółgłoski następujące prawdopodobne litery klucza:")
+    print(potentialKey)
+    
+    #hunting for digram "RE"
+    if len(consonants)>0:
+        for i in range(len(digramfrequencyCiphertext)):
+            if potentialKey[4] == digramfrequencyCiphertext[i][0][0]:
+                if digramfrequencyCiphertext[i][0][1] in consonants:               
+                        potentialKey[17] = digramfrequencyCiphertext[i][0][1]
+                        consonants.remove(digramfrequencyCiphertext[i][0][1])
+                        break
+                elif digramfrequencyCiphertext[i][0][1] not in potentialKey:
+                    break
+            if potentialKey[4] == digramfrequencyCiphertext[i][0][1]:
+                if digramfrequencyCiphertext[i][0][0] in consonants:                
+                        potentialKey[17] = digramfrequencyCiphertext[i][0][0]
+                        consonants.remove(digramfrequencyCiphertext[i][0][0])
+                        break
+                elif digramfrequencyCiphertext[i][0][0] not in potentialKey:
+                    break
+                    
+    print("Po dokonaniu analizy częstośći digramów i występowania spółgłosek z samogłoską 'e' uzyskano następujące prawdopodobne litery klucza:")
+    print(potentialKey)
+    print("Następujące liery skasyfikowane jako samogłoski pozostały nieumieszczone w kluczu:")
+    print(vowels)
+    print("Następujące liery skasyfikowane jako spółgłoski pozostały nieumieszczone w kluczu:")
+    print(consonants)
+    #----------------------------------------lexical - speculation----------------------------------------------------
+    
+    
+    while " " in potentialKey:
+        wrongPattern = {}
+        flag = True
+        maxi = 20
+        mini = 6
+        while flag and " " in potentialKey:
+            flag = False
+            plaintext = ""
+            for letter in ciphertext:
+                if letter in potentialKey:
+                    plaintext = plaintext + alphabetEnglish[potentialKey.index(letter)]
+                else:
+                    plaintext = plaintext+ " "
+            #print(plaintext)
+
+            for size in range(maxi,mini,-1):
+                dictionaryBig = {}
+                with open("dictionary.txt", "r") as fileDictionary:         
+                    dictionaryBig = makedictionary(fileDictionary,alphabetEnglish,size,size)        
+                for pattern in dictionaryBig: 
+                    if pattern in wrongPattern:
+                        continue
+                    for j in range(len(ciphertext)-size):
+                        word =  plaintext[j:j+size]
+                        if word.count(" ") == 1:
+                            gapIndex = word.find(" ")
+                            #print(size,len(word),len(pattern))
+                            #print([word[gapIndex-jj] for jj in range(1,size)],[pattern[gapIndex-jj] for jj in range(1,size)])
+                            if [word[gapIndex-jj] for jj in range(1,size)] == [pattern[gapIndex-jj] for jj in range(1,size)]:               
+                                
+                                if potentialKey[alphabetEnglish.find(pattern[gapIndex])] == " ":
+                                    print("Program znalazł następującą zbitkę:")
+                                    print(word)
+                                    print("Sugerującą następujące słowo:")
+                                    print(pattern)
+                                    #print(j)
+                                    print("Odpowiada ono takiemu szyfrogramowi: ")
+                                    print(ciphertext[j:j+size])
+                                    print("Wpisz 1 aby zatwierdzić aktualizacje klucza, lub 0 aby nie uznać tej sugestii")
+                                    steruj = input()
+                                    if steruj == "1":
+                                        potentialKey[alphabetEnglish.find(pattern[gapIndex])] = ciphertext[j+gapIndex]
+                                        flag = True
+                                    else:
+                                        wrongPattern.update({pattern:len(wrongPattern)})
+                                        break
+                                        
+            if mini < 7:
+                mini+=1
+            print("Po uwzględnieniu ostatnich pasujacych zbitek uzyskano następujące prawdopodobne litery klucza:")
+            print(potentialKey)
+        print("Po przeszukaniu wszystkich wzorów słów o długościach od %d do %d usyskano następujący prawdopodobny tekst jawny oraz klucz"%(mini,maxi))
+        plaintext = ""
+        for letter in ciphertext:
+            if letter in potentialKey:
+                plaintext = plaintext + alphabetEnglish[potentialKey.index(letter)]
+            else:
+                plaintext = plaintext+ " "
+        print(plaintext)
+        print(potentialKey)
+        if " " in potentialKey:
+            print("Program wyczerpał możliwości kryptoanalizy. Jeżeli odgadujesz dalsze wartości klucza podaj je by ukończyć deszyfracje")
+            print("Podaj literę alfabetu którą zdeszyfrowałeś, lub wpisz 1 aby zakończyć działanie programu:")
+            letp = input().upper()
+            while True:
+                if letp == "1":
+                    quit()
+                if letp in alphabetEnglish:
+                    keyIndex = alphabetEnglish.find(letp)
+                    if potentialKey[keyIndex] == " ":
+                        print("Podaj literę alfabetu będącą szyfrogramem powyższej litery")
+                        letc = input().upper()
+                        if letc in alphabetEnglish:
+                            if letc not in potentialKey:                        
+                                potentialKey[keyIndex] = letc
+                                break
+                            else:
+                                print("Ta litera jest już przypisana do klucza, podaj inną literę będącą szyfrogramem, lub wpisz 1 aby zakończyć")
+                                letc = input().upper()
+
+                    else:
+                        print("Podano już zdeszyfrowaną literę, poddaj inną zdeszyfrowaną literę, lub wpisz 1, aby zakończyć")
+                        letp = input().upper()
+                else:
+                    print("Podano niewłaściwy znak, spróbuj jeszcze raz")
+                    letp = input().upper() 
+        if potentialKey.count(" ") ==1:
+            for letter in alphabetEnglish:
+                if letter not in potentialKey:
+                    potentialKey[potentialKey.index(" ")] = letter
+    plaintext = ""
+    for lettr in ciphertext:
+        if lettr in potentialKey:
+            plaintext = plaintext + alphabetEnglish[potentialKey.index(lettr)]
+        else:
+            plaintext = plaintext+ " "
+      
+    print(plaintext)
+    print(potentialKey)
+    print("Pomyślnie odtworzono cały klucz i odszyfrowano pełen szyfrogram, (patrz powyżej)")  
+    print("Po wprowadzeniu dowolnego znaku  program zakończy działanie: ")
+    
+    a = input()     
+    quit()
+quit()  

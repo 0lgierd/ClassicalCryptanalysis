@@ -1,0 +1,5 @@
+correspondenceSequence = []
+for tup1, tup2 in combinations(frequencyEnglish,2):
+    correspondenceSequence.append((tup1[0],tup2[0],abs(tup1[1]-tup2[1])))
+correspondenceSequence = sorted(correspondenceSequence,key=lambda x: x[2])
+print(correspondenceSequence)
